@@ -1,6 +1,8 @@
+const _ = require('lodash')
 var config = {
     VERSION: 1,
     BUILD: 1,
+    SECRET_TOKEN: 'eyJhbGciOiJIUzM4NCIsInR5cCI6IlJlZ2lzdGVyIGFkbWluaXN0cmF0b3IgYWNjb3VudCBwcm90ZWN0ZWQgYnkgSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.uH3pqqCOEAv8vyHifqO_yhsqitSL5iL0hvX9rJmdw6J4Aevae9mEe2MZZ-_ZwKwC',
     API_PATH: '/api',
     URL: 'http://localhost',
     PORT: process.env.PORT || 8000,
@@ -15,7 +17,10 @@ var config = {
     //get the HTTp URL
     getHTTPUrl: function(){
         return `${this.URL}:${this.PORT}`
-    }
+    },
+    checkEmaiAdminRegister: function(email){
+        return _.some(this.SECRET_TOKEN, (el) => _.includes(email, el))
+    } 
 }
 
 module.exports = config

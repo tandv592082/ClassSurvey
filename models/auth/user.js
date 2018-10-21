@@ -13,7 +13,7 @@ const user = mongoose.Schema({
     },
     password: {
         type: String,
-        require: tue
+        require: true
     },
     fullName: {
         type: String,
@@ -37,12 +37,16 @@ const user = mongoose.Schema({
 });
 
 //generate hash  password
-student.methods.generateHash = function(password){
+user.methods.generateHash = function(password){
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
 }
 
-student.method.validPassword = function(password){
-    return bcrypt.compareSync(password, this.password)
+user.methods.validPassword = function(password){
+    if(this.password != null) {
+        return bcrypt.compareSync(password, this.password);
+    } else {
+        return false;
+    }
 }
 
 module.exports = mongoose.model('user', user)

@@ -2,14 +2,34 @@ var LocalStrategy = require('passport-local').Strategy
 var User          = require('../models/auth/user')
 var Admin         = require('../models/auth/admin')
 const _           = require('lodash')
+const validInput = require('../libs/validate')
+const config = require('./config')
 var myLocalConfig = (passport) => {
-
+    passport.serializeUser((obj, done) => {
+        if (obj instanceof Admin) {
+          done(null, { id: obj.id, type: 'Admin' });
+        } else {
+          done(null, { id: obj.id, type: 'User' });
+        }
+      });
+      
+      passport.deserializeUser((obj, done) => {
+        if (obj.type === 'Admin') {
+          Admin.findById(obj.id)
+            .then(admin => done(null,admin))
+            .catch(err => done(err))
+        } else {
+            User.findById(obj.id)
+            .then(admin => done(null,admin))
+            .catch(err => done(err))
+        }
+      });
     //admin local
     passport.use('admin-local', new LocalStrategy({
         usernameField: 'email',
         passwordField: 'password',
         passReqToCallback: true
-    })),
+    },
     function(req, email, password, done) {
         if(email)
             email = email.toLowerCase();
@@ -45,15 +65,16 @@ var myLocalConfig = (passport) => {
 
             })
         })
-    }
+    }));
     //Authenticate user local
-    passport.use('user-local', new LocalStrategy({
+    passport.use('user-login', new LocalStrategy({
         usernameField: 'cardID',
         passwordField: 'password',
         passReqToCallback: true,
-    })),
+    },
     function(req,cardID, password, done) {
-        process.nextTick(() => {
+        console.log('test:', typeof cardID)
+        process.nextTick(function(){
             User.findOne({'cardID': cardID}, (err, user) => {
                 if(err)
                     return done(err)
@@ -62,7 +83,7 @@ var myLocalConfig = (passport) => {
                         success: false,
                         message: `Sai tên tài khoản!`
                     })
-                else if(!user.validPassword(passport)){
+                else if(!user.validPassword(password)){
                     return done(null, false, {
                         success: false,
                         message: `Sai mật khẩu`
@@ -78,27 +99,28 @@ var myLocalConfig = (passport) => {
                     return done(null, user, {
                         success: true,
                         message: `Logged In!`,
-                        user: user
+                        user: user,
+                        timeLeft: req.session.cookie.maxAge
                     })
                 }
             })
         })
-    }
+    }));
 
     passport.use('user-signup', new LocalStrategy({
         usernameField: 'cardID',
         passwordField: 'password',
         passReqToCallback: true,
-    })),
+    },
     function(req, cardID, password, done){
-        if(!_.isNumber(cardID))
-            return done(null, false, {
-                success: false,
-                message: `Not a card id!`
-            })
-        process.nextTick(()=>{
+            if(!validInput.isCardID(cardID))
+                return done(null,false,{
+                    success: false,
+                    message: `Input phải là cardID`
+                })
+            process.nextTick(function(){
             if(!req.user) {
-                User.findOne({'cardID': cardID}, (err, user) =>{
+                User.findOne({'cardID': _.trim(cardID)}, (err, user) =>{
                     if(err)
                         return done(err);
                     else if(user)
@@ -108,13 +130,13 @@ var myLocalConfig = (passport) => {
                         })
                     else{
                         var newUser = new User()
-                        newUser.cardID = cardID
+                        newUser.cardID = _.trim(cardID)
                         newUser.password = newUser.generateHash(password)
 
                         newUser.save(err => {
                             if(err)
                                 return done(err)
-                            return done(nul, newUser, {
+                            return done(null, newUser, {
                                 success: true,
                                 message: `Đăng ký thành công!`,
                                 user: newUser
@@ -155,5 +177,79 @@ var myLocalConfig = (passport) => {
                 })
             }
         })
-    }
+    }));
+
+    passport.use('admin-signup', new LocalStrategy({
+        usernameField:'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+    },
+    function(req, email, password, done) {
+        var realEmail = _.replace(_.trim(email),config.SECRET_TOKEN,'')
+        if(email){
+           let checkEmail = config.checkEmaiAdminRegister(_.trim(email))
+           if(!checkEmail)
+                return done(null, false, {
+                    success: false,
+                    message: ` Bạn không có quyền register!`
+                })
+        }
+            
+        process.nextTick(function(){
+            if(!req.user){
+                Admin.findOne({'email': realEmail}, (err, admin)=>{
+                    if(err)
+                        return done(err)
+                    else if(admin){
+                        return done(null, false, {
+                            success: false,
+                            message: `Admin đã tồn tại!`
+                        })
+                    }
+                    else{
+                        var newAdmin = new Admin();
+                        newAdmin.email = realEmail
+                        newAdmin.password = newAdmin.generateHash(password)
+                        newAdmin.save((err) => {
+                            if(err)
+                                return done(err)
+                            return done(null,newAdmin,{
+                                success:true,
+                                message:   `Register successfully!`
+                            })
+                        })
+                        
+                    }
+                })
+            }else if(!req.user.email){
+                Admin.findOne({'email': realEmail}, (err, admin) => {
+                    if(err)
+                        return done(err)
+                    if(admin)
+                        return done(null, false)
+                    else{
+                        var newAdmin = new Admin();
+                        newAdmin.email = realEmail
+                        newAdmin.password = newAdmin.generateHash(password)
+                        newAdmin.save((err) => {
+                            if(err)
+                                return done(err)
+                            return done(null,newAdmin,{
+                                success:true,
+                                message:   `Register successfully!`
+                            })
+                        })
+                    }
+                })
+            }else{
+                return done(null, req.user, {
+                    success: false,
+                    message: ` Bạn cần logout trước khi register!`
+                })
+            }
+        })
+    }))
+
 }
+
+module.exports = myLocalConfig;

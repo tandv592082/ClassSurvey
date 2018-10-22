@@ -41,5 +41,21 @@ module.exports = {
                 message: `Deleted user id: ${req.params.id} !`
             })
         })
+    },
+    updateUser: async(req, res, next) => {
+        await User.findByIdAndUpdate(req.params.id, req.body, (err, user) =>{
+            if(err){
+                next(err)
+            }
+            else if(!user){
+                let err = new Error(` Không tìm thấy user với id ${req.params.id}!`)
+                err.statusCode = 404
+                next(err)
+            }
+            res.status(200).json({
+                success: true,
+                message: `User id ${req.params.id} has been updated!`
+            })
+        })
     }
 }

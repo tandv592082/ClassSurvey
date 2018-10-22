@@ -8,4 +8,5 @@ router.post('/login', user.logIn)
 
 router.delete('/deleteUserById/:id', authenticate.isLoggedIn, authenticate.isAdmin, user.removeUser)
 
+router.put('/updateUserById/:id', user.updateUser)
 module.exports = router

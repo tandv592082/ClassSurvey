@@ -25,6 +25,7 @@ const admin = require('./routes/auth/admin')
 app.use('/auth', user);
 app.use('/auth', admin)
 app.get('/test',authenticate.isLoggedIn, (req, res) => {
+    console.log('XX', req.user)
     res.json('ok')
 })
 

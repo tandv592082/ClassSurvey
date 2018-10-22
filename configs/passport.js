@@ -20,7 +20,7 @@ var myLocalConfig = (passport) => {
             .catch(err => done(err))
         } else {
             User.findById(obj.id)
-            .then(admin => done(null,admin))
+            .then(user => done(null,user))
             .catch(err => done(err))
         }
       });

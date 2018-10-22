@@ -36,7 +36,7 @@ module.exports = {
         await User.findByIdAndRemove(req.params.id, (err,data) =>{
             if(err)
                 next(err)
-            res.json(200).json({
+            res.status(200).json({
                 success: true,
                 message: `Deleted user id: ${req.params.id} !`
             })

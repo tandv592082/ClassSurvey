@@ -6,6 +6,6 @@ router.post('/signup',user.signUp)
 
 router.post('/login', user.logIn)
 
-router.delete('/deleteUserById', authenticate.isLoggedIn, authenticate.isAdmin, user.removeUser)
+router.delete('/deleteUserById/:id', authenticate.isLoggedIn, authenticate.isAdmin, user.removeUser)
 
 module.exports = router

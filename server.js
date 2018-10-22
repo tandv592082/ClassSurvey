@@ -20,9 +20,11 @@ app.use(logger('dev'))
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(errHandler)
 //routers
-const user = require('./routes/auth/user')
-app.use('/auth', user)
-app.get('/test',authenticate, (req, res) => {
+const user  = require('./routes/auth/user')
+const admin = require('./routes/auth/admin')
+app.use('/auth', user);
+app.use('/auth', admin)
+app.get('/test',authenticate.isLoggedIn, (req, res) => {
     res.json('ok')
 })
 

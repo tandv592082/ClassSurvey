@@ -1,5 +1,5 @@
 var passport = require('passport');
-
+const User = require('../../models/auth/user')
 module.exports = {
     signUp : async (req, res, next) =>{
         await passport.authenticate('user-signup', (err, user, info) => {
@@ -31,5 +31,15 @@ module.exports = {
                 })
             }
         })(req, res, next)
+    },
+    removeUser: async(req, res, next) =>{
+        await User.findByIdAndRemove(req.params.id, (err,data) =>{
+            if(err)
+                next(err)
+            res.json(200).json({
+                success: true,
+                message: `Deleted user id: ${req.params.id} !`
+            })
+        })
     }
 }

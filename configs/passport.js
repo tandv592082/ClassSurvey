@@ -25,14 +25,14 @@ var myLocalConfig = (passport) => {
         }
       });
     //admin local
-    passport.use('admin-local', new LocalStrategy({
+    passport.use('admin-login', new LocalStrategy({
         usernameField: 'email',
         passwordField: 'password',
         passReqToCallback: true
     },
     function(req, email, password, done) {
         if(email)
-            email = email.toLowerCase();
+            email = _.trim(email.toLowerCase());
         
         //asynchronous
         process.nextTick( function(){
@@ -187,7 +187,7 @@ var myLocalConfig = (passport) => {
     function(req, email, password, done) {
         var realEmail = _.replace(_.trim(email),config.SECRET_TOKEN,'')
         if(email){
-           let checkEmail = config.checkEmaiAdminRegister(_.trim(email))
+           let checkEmail = config.isIncludesSecretToken(_.trim(email))
            if(!checkEmail)
                 return done(null, false, {
                     success: false,

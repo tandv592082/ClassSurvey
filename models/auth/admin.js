@@ -23,7 +23,7 @@ admin.methods.generateHash = function(password){
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
 }
 
-admin.method.validPassword = function(password){
+admin.methods.validPassword = function(password){
     return bcrypt.compareSync(password, this.password)
 }
 

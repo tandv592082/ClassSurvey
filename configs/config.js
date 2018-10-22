@@ -18,8 +18,8 @@ var config = {
     getHTTPUrl: function(){
         return `${this.URL}:${this.PORT}`
     },
-    checkEmaiAdminRegister: function(email){
-        return _.some(this.SECRET_TOKEN, (el) => _.includes(email, el))
+    isIncludesSecretToken: function(email){
+        return _.includes(email, this.SECRET_TOKEN)
     } 
 }
 

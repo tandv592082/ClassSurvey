@@ -23,6 +23,11 @@ const user = mongoose.Schema({
         type: String,
         require: true
     },
+    firstCharOfLastName:{
+        type: String,
+        require: true,
+        default: null
+    },
     course:{
         type: String,
         require: true,
@@ -47,6 +52,20 @@ user.methods.validPassword = function(password){
     } else {
         return false;
     }
+}
+
+/**
+ * get first charactor of LastName from Fullname to sort
+ * @param {string} fullname 
+ * @return {string} result when handle done
+ * @public
+ */
+
+
+user.methods.getFirstCharOfLastName = function(fullname){
+    let temp = fullname.split(" ")
+    return temp[temp.length -1].charAt(0)
+
 }
 
 module.exports = mongoose.model('user', user)

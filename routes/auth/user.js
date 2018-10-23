@@ -9,4 +9,7 @@ router.post('/login', user.logIn)
 router.delete('/deleteUserById/:id', authenticate.isLoggedIn, authenticate.isAdmin, user.removeUser)
 
 router.put('/updateUserById/:id', user.updateUser)
+
+router.get('/getAllStudent', user.getAllStudent)
+
 module.exports = router

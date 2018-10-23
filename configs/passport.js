@@ -129,10 +129,25 @@ var myLocalConfig = (passport) => {
                             message: `Đã tồn tại tên tài khoản!`
                         })
                     else{
+                        if(req.body.fullName === undefined){
+                            return done(null, false, {
+                                success: false,
+                                message: ` Chưa nhập họ và tên !`
+                            })
+                        }
+                        else if(!validInput.isFullName(req.body.fullName)){
+                            return done(null, false,{
+                                success: false,
+                                message: ` Họ và Tên sai định dạng!`
+                            })
+                        }
                         var newUser = new User()
+                        if(req.body.type !== undefined){
+                            newUser.type = validInput.convertType(req.body.type)
+                        }
                         newUser.cardID = _.trim(cardID)
                         newUser.password = newUser.generateHash(password)
-
+                        newUser.fullName = req.body.fullName 
                         newUser.save(err => {
                             if(err)
                                 return done(err)
@@ -194,7 +209,12 @@ var myLocalConfig = (passport) => {
                     message: ` Bạn không có quyền register!`
                 })
         }
-            
+        else if(!validInput.isEmail(realEmail)){
+            return done(null, false,{
+                success: false,
+                message: `Not a email!`
+            })
+        }   
         process.nextTick(function(){
             if(!req.user){
                 Admin.findOne({'email': realEmail}, (err, admin)=>{

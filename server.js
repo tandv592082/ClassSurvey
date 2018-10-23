@@ -18,17 +18,17 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(logger('dev'))
 app.use(bodyParser.urlencoded({ extended: false }))
-app.use(errHandler)
+
 //routers
 const user  = require('./routes/auth/user')
 const admin = require('./routes/auth/admin')
 app.use('/auth', user);
 app.use('/auth', admin)
 app.get('/test',authenticate.isLoggedIn, (req, res) => {
-    console.log('XX', req.user)
+    console.log('test id', typeof req.user._id)
     res.json('ok')
 })
-
+app.use(errHandler)
 //server setup
 app.listen(config.PORT, () => {
     console.log(`Server running on ${config.getHTTPUrl()}`)

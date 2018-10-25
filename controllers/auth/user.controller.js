@@ -7,7 +7,7 @@ module.exports = {
             if(err){
                 let err = new Error(`${err}`)
                 err.statusCode = 400
-                return 
+                return next(err)
             }
             else {
                 res.status(200).json(info)
@@ -19,7 +19,7 @@ module.exports = {
             if(err){
                 let err = new Error(`${err}`)
                 err.statusCode = 400
-                return 
+                return next(err)
             }
             else if(!user){
                 return res.status(404).json(info)
@@ -28,7 +28,7 @@ module.exports = {
                 
                 req.login(user, (err) => {
                     if(err)
-                        return 
+                        return next(err)
                     return res.status(200).json(info)
                 })
             }
@@ -39,10 +39,10 @@ module.exports = {
             if(!validInput.isID(req.params.id)){
                 let err = new Error('Params is not a mongoose Id!')
                 err.statusCode = 422
-                return 
+                return next(err)
             }
             else if(err)
-                return 
+                return next(err)
             res.status(200).json({
                 success: true,
                 message: `Deleted user id: ${req.params.id} !`
@@ -50,19 +50,19 @@ module.exports = {
         })
     },
     updateUser: async(req, res, next) => {
-        await User.findByIdAndUpdate(req.params.id, req.body, (err, user) =>{
+        await User.findOne({_id : req.params.id}, (err, user) =>{
             if(!validInput.isID(req.params.id)){
                 let err = new Error('Params is not a mongoose Id!')
                 err.statusCode = 422
-                return 
+                return next(err)
             }
             else if(err){
-                return 
+                return next(err)
             }
             else if(!user){
                 let err = new Error(` Không tìm thấy user với id ${req.params.id}!`)
                 err.statusCode = 404
-                return 
+                return next(err)
             }
             if(req.body.fullName !== undefined){
                 if(!validInput.isFullName(req.body.fullName)){
@@ -71,14 +71,32 @@ module.exports = {
                         message: 'Họ và tên sai định dạng!'
                     })
                 }
+               user.fullName = req.body.fullName
+               user.firstCharOfLastName = user.getFirstCharOfLastName(req.body.fullName)
             }
             if(req.body.type !== undefined){
-                newUser.type = validInput.convertType(req.body.type)
+                var check = validInput.isValidType(req.body.type)
+                if(!check){
+                    return res.status(422).json({
+                        success: false,
+                        message: `Invalid type!`
+                    })
+                }
+                user.type = validInput.convertType(req.body.type)
+
             }
-            res.status(200).json({
-                success: true,
-                message: `User id ${req.params.id} has been updated!`
+            if(req.body.course !== undefined){
+                user.course = req.body.course
+            }
+            user.save(err => {
+                if(err)
+                    return next(err)
+                return  res.status(200).json({
+                    success: true,
+                    message: `User id ${req.params.id} has been updated!`
+                })
             })
+           
         })
     },
     getAllStudent: async(req, res, next) =>{

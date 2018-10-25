@@ -62,13 +62,34 @@ module.exports = {
     },
     /**
      * format type of user if err
-     * @param {nmuber} type as as page
+     * @param {number} type as as page
+     * @return {boolean} new type when format done
+     * @public
+     */
+    isValidType : (type) => {
+        if(type ==='' || !type)
+            return false
+        return true
+    },
+    /**
+     * format type of user if err
+     * @param {number} type as as page
      * @return {number} new type when format done
      * @public
      */
-    convertType: (type) => {
-        if(type !==1 || type !== 2)
+    convertType : (type) => {
+        if(parseInt(type) < 0 || parseInt(type) > 2)
             type = 1
         return type
+    },
+    /**
+     * Check valid password
+     * @param {string} password as password need check
+     * @return {boolean} password check is valid password ?
+     * @public
+     */
+    isValidPassword: (password) => {
+        let regPass = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/g)
+        return regPass.test(password)
     }
 }

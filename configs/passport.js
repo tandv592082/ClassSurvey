@@ -118,6 +118,24 @@ var myLocalConfig = (passport) => {
                     success: false,
                     message: `Input phải là cardID`
                 })
+            else if(!validInput.isValidPassword(password)){
+                return done(null, false, {
+                    success: false,
+                    message: 'Mật khẩu gồm ít nhất 8 kí tự, ít nhất 1 chữ cái Hoa, 1 chữ cái thường và ít nhất 1 số!'
+                })
+            }
+            else if(req.body.fullName === undefined){
+                return done(null, false, {
+                    success: false,
+                    message: ` Chưa nhập họ và tên !`
+                })
+            }
+            else if(!validInput.isFullName(req.body.fullName)){
+                return done(null, false,{
+                    success: false,
+                    message: ` Họ và Tên sai định dạng!`
+                })
+            }
             process.nextTick(function(){
             if(!req.user) {
                 User.findOne({'cardID': _.trim(cardID)}, (err, user) =>{
@@ -129,25 +147,23 @@ var myLocalConfig = (passport) => {
                             message: `Đã tồn tại tên tài khoản!`
                         })
                     else{
-                        if(req.body.fullName === undefined){
-                            return done(null, false, {
-                                success: false,
-                                message: ` Chưa nhập họ và tên !`
-                            })
-                        }
-                        else if(!validInput.isFullName(req.body.fullName)){
-                            return done(null, false,{
-                                success: false,
-                                message: ` Họ và Tên sai định dạng!`
-                            })
-                        }
                         var newUser = new User()
                         if(req.body.type !== undefined){
+                            if(!validInput.isValidType(req.body.type)){
+                                return done(null, false, {
+                                    success: false,
+                                    message: 'Invalid type!'
+                                })
+                            }
                             newUser.type = validInput.convertType(req.body.type)
+                        }
+                        if(req.body.course !== undefined){
+                            newUser.course = req.body.course
                         }
                         newUser.cardID = _.trim(cardID)
                         newUser.password = newUser.generateHash(password)
                         newUser.fullName = req.body.fullName 
+                        newUser.firstCharOfLastName = newUser.getFirstCharOfLastName(req.body.fullName)
                         newUser.save(err => {
                             if(err)
                                 return done(err)
@@ -208,6 +224,12 @@ var myLocalConfig = (passport) => {
                     success: false,
                     message: ` Bạn không có quyền register!`
                 })
+        }
+        else if(!validInput.isValidPassword(password)){
+            return done(null, false, {
+                success:false,
+                message: 'Mật khẩu ít nhất :1 sô, 1 chữ hoa, 1 chữ thường!'
+            })
         }
         else if(!validInput.isEmail(realEmail)){
             return done(null, false,{

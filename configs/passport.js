@@ -1,15 +1,19 @@
 var LocalStrategy = require('passport-local').Strategy
-var User          = require('../models/auth/user')
+var Student       = require('../models/auth/student')
+var Teacher       = require('../models/auth/teacher')
 var Admin         = require('../models/auth/admin')
 const _           = require('lodash')
-const validInput = require('../libs/validate')
-const config = require('./config')
+const validInput  = require('../libs/validate')
+const config      = require('./config')
 var myLocalConfig = (passport) => {
     passport.serializeUser((obj, done) => {
         if (obj instanceof Admin) {
           done(null, { id: obj.id, type: 'Admin' });
-        } else {
-          done(null, { id: obj.id, type: 'User' });
+        } else if (obj instanceof Student) {
+          done(null, { id: obj.id, type: 'Student' });
+        }
+        else{
+            done(null,{ id: obj.id, type: 'Teacher' })
         }
       });
       
@@ -18,9 +22,14 @@ var myLocalConfig = (passport) => {
           Admin.findById(obj.id)
             .then(admin => done(null,admin))
             .catch(err => done(err))
-        } else {
-            User.findById(obj.id)
-            .then(user => done(null,user))
+        } else if(obj.type === 'Student') {
+            Student.findById(obj.id)
+            .then(student => done(null,student))
+            .catch(err => done(err))
+        }
+        else{
+            Teacher.findById(obj.id)
+            .then(teacher => done(null,teacher))
             .catch(err => done(err))
         }
       });
@@ -67,15 +76,14 @@ var myLocalConfig = (passport) => {
         })
     }));
     //Authenticate user local
-    passport.use('user-login', new LocalStrategy({
+    passport.use('student-login', new LocalStrategy({
         usernameField: 'cardID',
         passwordField: 'password',
         passReqToCallback: true,
     },
     function(req,cardID, password, done) {
-        console.log('test:', typeof cardID)
         process.nextTick(function(){
-            User.findOne({'cardID': cardID}, (err, user) => {
+            Student.findOne({'cardID': cardID}, (err, user) => {
                 if(err)
                     return done(err)
                 else if(!user)
@@ -98,7 +106,7 @@ var myLocalConfig = (passport) => {
                     })
                     return done(null, user, {
                         success: true,
-                        message: `Logged In!`,
+                        message: `Student Logged In!`,
                         user: user,
                         timeLeft: req.session.cookie.maxAge
                     })
@@ -107,7 +115,7 @@ var myLocalConfig = (passport) => {
         })
     }));
 
-    passport.use('user-signup', new LocalStrategy({
+    passport.use('student-signup', new LocalStrategy({
         usernameField: 'cardID',
         passwordField: 'password',
         passReqToCallback: true,
@@ -138,7 +146,7 @@ var myLocalConfig = (passport) => {
             }
             process.nextTick(function(){
             if(!req.user) {
-                User.findOne({'cardID': _.trim(cardID)}, (err, user) =>{
+                Student.findOne({'cardID': _.trim(cardID)}, (err, user) =>{
                     if(err)
                         return done(err);
                     else if(user)
@@ -147,16 +155,7 @@ var myLocalConfig = (passport) => {
                             message: `Đã tồn tại tên tài khoản!`
                         })
                     else{
-                        var newUser = new User()
-                        if(req.body.type !== undefined){
-                            if(!validInput.isValidType(req.body.type)){
-                                return done(null, false, {
-                                    success: false,
-                                    message: 'Invalid type!'
-                                })
-                            }
-                            newUser.type = validInput.convertType(req.body.type)
-                        }
+                        var newUser = new Student()
                         if(req.body.course !== undefined){
                             newUser.course = req.body.course
                         }
@@ -177,7 +176,7 @@ var myLocalConfig = (passport) => {
                 })
             }
             else if( !req.user.cardID) {
-                User.findOne({'cardID': cardID}, (err, user) =>{
+                Student.findOne({'cardID': cardID}, (err, user) =>{
                     if(err)
                         return done(err)
                     if(user)
@@ -209,6 +208,147 @@ var myLocalConfig = (passport) => {
             }
         })
     }));
+
+    //teacher
+    passport.use('teacher-signup', new LocalStrategy({
+        usernameField: 'userName',
+        passwordField: 'password',
+        passReqToCallback: true,
+    },
+    function(req, userName, password, done){
+            if(!validInput.isValidUserName(userName)){
+                return done(null, false, {
+                    success: false,
+                    message:`username is require!`
+                })
+            }
+            else if(!validInput.isCardID(req.body.cardID))
+            return done(null,false,{
+                success: false,
+                message: `Input phải là cardID`
+            })
+            else if(!validInput.isValidPassword(password)){
+                return done(null, false, {
+                    success: false,
+                    message: 'Mật khẩu gồm ít nhất 8 kí tự, ít nhất 1 chữ cái Hoa, 1 chữ cái thường và ít nhất 1 số!'
+                })
+            }
+            else if(req.body.fullName === undefined){
+                return done(null, false, {
+                    success: false,
+                    message: ` Chưa nhập họ và tên !`
+                })
+            }
+            else if(!validInput.isFullName(req.body.fullName)){
+                return done(null, false,{
+                    success: false,
+                    message: ` Họ và Tên sai định dạng!`
+                })
+            }
+            process.nextTick(function(){
+            if(!req.user) {
+                Teacher.findOne({'userName': _.trim(userName)}, (err, user) =>{
+                    if(err)
+                        return done(err);
+                    else if(user)
+                        return done(null, false, {
+                            success: false,
+                            message: `Đã tồn tại tên tài khoản!`
+                        })
+                    else{
+                        var newUser = new Teacher()
+                        newUser.cardID = _.trim(req.body.cardID)
+                        newUser.userName = _.trim(userName)
+                        newUser.password = newUser.generateHash(password)
+                        newUser.fullName = req.body.fullName 
+                        newUser.firstCharOfLastName = newUser.getFirstCharOfLastName(req.body.fullName)
+                        newUser.save(err => {
+                            if(err)
+                                return done(err)
+                            return done(null, newUser, {
+                                success: true,
+                                message: `Đăng ký thành công!`,
+                                user: newUser
+                            })
+                        })
+                    }
+                })
+            }
+            else if( !req.user.userName) {
+                Teacher.findOne({'userName': userName}, (err, user) =>{
+                    if(err)
+                        return done(err)
+                    if(user)
+                        return done(null, false,{
+                            success: false,
+                            message: `Đã tồn tại tên tài khoản`
+                        })
+                    else{
+                        var user = req.user
+                        user.userName = userName
+                        user.password = user.generateHash(password)
+                        user.save((err) => {
+                            if(err)
+                                return done(err)
+                            return done(null, user, {
+                                success: true,
+                                message: `Đăng kí tài khoản thành công`,
+                                user: user
+                            })
+                        })
+                    }
+                })
+            }
+            else{
+                return done(null, req.user, {
+                    success: false,
+                    message: ` Bạn cần logout trước khi đăng kí tài khoản mới!`
+                })
+            }
+        })
+    }));
+
+
+    passport.use('teacher-login', new LocalStrategy({
+        usernameField: 'userName',
+        passwordField: 'password',
+        passReqToCallback: true,
+    },
+    function(req,userName, password, done) {
+        process.nextTick(function(){
+            Teacher.findOne({'userName': userName}, (err, user) => {
+                if(err)
+                    return done(err)
+                else if(!user)
+                    return done(null, false,{
+                        success: false,
+                        message: `Sai tên tài khoản!`
+                    })
+                else if(!user.validPassword(password)){
+                    return done(null, false, {
+                        success: false,
+                        message: `Sai mật khẩu`
+                    })
+                }
+                else{
+                    user.lastLogin = Date.now().valueOf()
+                    user.save(err => {
+                        if(err)
+                            return done(err)
+                        console.log(`Saved LastLogin!`)
+                    })
+                    return done(null, user, {
+                        success: true,
+                        message: `Teacher Logged In!`,
+                        user: user,
+                        timeLeft: req.session.cookie.maxAge
+                    })
+                }
+            })
+        })
+    }));
+
+
 
     passport.use('admin-signup', new LocalStrategy({
         usernameField:'email',

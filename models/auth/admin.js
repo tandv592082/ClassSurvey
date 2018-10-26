@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt-nodejs')
-const user = require('./user')
+const student = require('./student')
+const teacher = require('./teacher')
 const admin = new mongoose.Schema({
     email: {
         type: String,
@@ -15,7 +16,8 @@ const admin = new mongoose.Schema({
         default: Date.now,
         require: true
     },
-    createUser:[{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }]
+    createStudent:[{ type: mongoose.Schema.Types.ObjectId, ref: 'student' }],
+    createTeacher:[{ type: mongoose.Schema.Types.ObjectId, ref: 'teacher' }]
 });
 
 //generating a hash

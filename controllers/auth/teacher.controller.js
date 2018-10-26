@@ -1,9 +1,9 @@
 var passport = require('passport');
-const User = require('../../models/auth/user')
+const Teacher = require('../../models/auth/teacher')
 const validInput = require('../../libs/validate')
 module.exports = {
     signUp : async (req, res, next) =>{
-        await passport.authenticate('user-signup', (err, user, info) => {
+        await passport.authenticate('teacher-signup', (err, user, info) => {
             if(err){
                 let err = new Error(`${err}`)
                 err.statusCode = 400
@@ -15,7 +15,7 @@ module.exports = {
         })(req, res, next)
     },
     logIn: async(req, res, next) => {
-        await passport.authenticate('user-login',(err, user, info) =>{
+        await passport.authenticate('teacher-login',(err, user, info) =>{
             if(err){
                 let err = new Error(`${err}`)
                 err.statusCode = 400
@@ -34,14 +34,14 @@ module.exports = {
             }
         })(req, res, next)
     },
-    removeUser: async(req, res, next) =>{
-        await User.findByIdAndRemove(req.params.id, (err,data) =>{
-            if(!validInput.isID(req.params.id)){
-                let err = new Error('Params is not a mongoose Id!')
-                err.statusCode = 422
-                return next(err)
-            }
-            else if(err)
+    removeTeacher: async(req, res, next) =>{
+        if(!validInput.isID(req.params.id)){
+            let err = new Error('Params is not a mongoose Id!')
+            err.statusCode = 422
+            return next(err)
+        }
+        await Teacher.findByIdAndRemove(req.params.id, (err,data) =>{
+           if(err)
                 return next(err)
             res.status(200).json({
                 success: true,
@@ -49,14 +49,14 @@ module.exports = {
             })
         })
     },
-    updateUser: async(req, res, next) => {
-        await User.findOne({_id : req.params.id}, (err, user) =>{
-            if(!validInput.isID(req.params.id)){
-                let err = new Error('Params is not a mongoose Id!')
-                err.statusCode = 422
-                return next(err)
-            }
-            else if(err){
+    updateTeacher: async(req, res, next) => {
+        if(!validInput.isID(req.params.id)){
+            let err = new Error('Params is not a mongoose Id!')
+            err.statusCode = 422
+            return next(err)
+        }
+        await Teacher.findOne({_id : req.params.id}, (err, user) =>{
+           if(err){
                 return next(err)
             }
             else if(!user){
@@ -74,19 +74,26 @@ module.exports = {
                user.fullName = req.body.fullName
                user.firstCharOfLastName = user.getFirstCharOfLastName(req.body.fullName)
             }
-            if(req.body.type !== undefined){
-                var check = validInput.isValidType(req.body.type)
+            if(req.body.cardID !== undefined){
+                var check = validInput.isCardID(_.trim(req.body.cardID))
                 if(!check){
                     return res.status(422).json({
                         success: false,
-                        message: `Invalid type!`
+                        message: `Invalid cardId!`
                     })
                 }
-                user.type = validInput.convertType(req.body.type)
-
             }
             if(req.body.course !== undefined){
                 user.course = req.body.course
+            }
+            if(req.body.userName !== undefined){
+                if(!validInput.isValidUserName(req.body.userName)){
+                    return res.status(422).json({
+                        success:false,
+                        message:'username is invalid!'
+                    })
+                }
+                user.userName = req.body.userName
             }
             user.save(err => {
                 if(err)
@@ -100,15 +107,19 @@ module.exports = {
         })
     },
     getAllStudent: async(req, res, next) =>{
-        let page = req.query.page
-        let limit = req.query.limit
+        var page = req.query.page
+        var limit = req.query.limit
         if(!validInput.isValidPageAndLimit(page, limit)){
             let err = new Error('Invalid query page or limit!')
             err.statusCode = 422
             return next(err)
         }
-        User.find({type: 1})
-            
+        var validPage = Math.max(0, parseInt(page)-1)
+
+        Student.find()
+            .limit(parseInt(limit))
+            .skip(validPage*10)
+            .sort({'firstCharOfLastName' : 1})
             .exec((err, data) => {
                 if(err)
                     return 

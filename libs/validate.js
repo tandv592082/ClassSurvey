@@ -91,5 +91,27 @@ module.exports = {
     isValidPassword: (password) => {
         let regPass = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/g)
         return regPass.test(password)
+    },
+    /**
+     * Check valid password
+     * @param {string} password as password need check
+     * @return {boolean} password check is valid password ?
+     * @public
+     */
+    isvalidObjectData: (credit, code, lectureRoom, dayOfTheWeek, classes) => {
+        if(!credit || !code || !lectureRoom || !dayOfTheWeek || !classes)
+            return false;
+        return true
+    },
+    /**
+     * Check valid username of teacher account
+     * @param {string} userName as username of teacher when register
+     * @return {boolean} check valid username
+     * @public
+     */
+    isValidUserName: (userName) => {
+        if(userName === '' || ! userName)
+            return false
+        return true
     }
 }

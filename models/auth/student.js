@@ -1,12 +1,7 @@
 const mongoose = require('mongoose')
 const admin = require('./admin')
 const bcrypt = require('bcrypt-nodejs')
-const user = mongoose.Schema({
-    type: {
-        type: Number,
-        require: true,
-        default: 1 // 1 : student 2: teacher
-    },
+const student = mongoose.Schema({
     cardID: {
         type: String,
         require: true
@@ -42,11 +37,11 @@ const user = mongoose.Schema({
 });
 
 //generate hash  password
-user.methods.generateHash = function(password){
+student.methods.generateHash = function(password){
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), null)
 }
 
-user.methods.validPassword = function(password){
+student.methods.validPassword = function(password){
     if(this.password != null) {
         return bcrypt.compareSync(password, this.password);
     } else {
@@ -62,10 +57,10 @@ user.methods.validPassword = function(password){
  */
 
 
-user.methods.getFirstCharOfLastName = function(fullname){
+student.methods.getFirstCharOfLastName = function(fullname){
     let temp = fullname.split(" ")
     return temp[temp.length -1].charAt(0)
 
 }
 
-module.exports = mongoose.model('user', user)
+module.exports = mongoose.model('student', student)

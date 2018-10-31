@@ -10,6 +10,7 @@ const sessionConfig  = require('./configs/session')
 const db             = require('./configs/database')
 const configPassport = require('./configs/passport')(passport)
 const authenticate   = require('./middleware/authenticate')
+const path           = require('path')
 var app              = express()
 //middleleware
 app.use(cookieParser(sessionConfig.secret));
@@ -18,14 +19,16 @@ app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
 app.use(logger('dev'))
 app.use(bodyParser.urlencoded({ extended: false }))
-
+app.use(express.static(path.join(__dirname,'')))//share public dir
 //routers
 const student  = require('./routes/auth/student')
 const teacher  = require('./routes/auth/teacher')
-const admin = require('./routes/auth/admin')
+const admin    = require('./routes/auth/admin')
+const object   = require('./routes/objects/object')
 app.use('/auth/student', student);
 app.use('/auth/teacher', teacher);
-app.use('/auth/admin', admin)
+app.use('/auth/admin', admin);
+app.use('/api/', object);
 app.get('/test',authenticate.isLoggedIn, (req, res) => {
     res.json('ok')
 })

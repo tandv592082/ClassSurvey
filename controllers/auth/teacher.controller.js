@@ -106,7 +106,7 @@ module.exports = {
            
         })
     },
-    getAllStudent: async(req, res, next) =>{
+    getAllTeacher: async(req, res, next) =>{
         var page = req.query.page
         var limit = req.query.limit
         if(!validInput.isValidPageAndLimit(page, limit)){
@@ -116,7 +116,7 @@ module.exports = {
         }
         var validPage = Math.max(0, parseInt(page)-1)
 
-        Student.find()
+        Teacher.find()
             .limit(parseInt(limit))
             .skip(validPage*10)
             .sort({'firstCharOfLastName' : 1})
@@ -128,5 +128,39 @@ module.exports = {
                     data
                 })
             })
+    },
+    changePasswordTeacher: async(req,res, next)=>{
+        if(!validInput.isValidPassword(req.body.password)){
+            return res.status(422).json({
+                success: false,
+                message: 'Invalid password!'
+            })
+        }
+        else if(!validInput.isID(req.params.id)){
+            let err = new Error('Params is not a mongoose Id!')
+            err.statusCode = 422
+            return next(err)
+        }
+        await Teacher.findById(req.params.id, (err,teacher) => {
+            if(err)
+                return next(err)
+            else if(!teacher){
+                return res.status(404).json({
+                    success: false,
+                    message: `Not found id ${req.params.id}`
+                })
+            }
+            else{
+                teacher.password = teacher.generateHash(req.body.password)
+                teacher.save((err)=>{
+                    if(err)
+                        return next(err)
+                    return res.status(200).json({
+                        success:true,
+                        message: `Student id ${req.params.id} updated password!`
+                    })
+                })
+            }
+        })
     }
 }

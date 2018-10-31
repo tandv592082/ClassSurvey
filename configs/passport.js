@@ -49,7 +49,7 @@ var myLocalConfig = (passport) => {
                 if(err)
                     return done(err)
                 if(!user)
-                    return done(null, false, {
+                    return done(null, false, { 
                         success: false,
                         message: `Sai tên tài khoản`
                     })
@@ -225,7 +225,7 @@ var myLocalConfig = (passport) => {
             else if(!validInput.isCardID(req.body.cardID))
             return done(null,false,{
                 success: false,
-                message: `Input phải là cardID`
+                message: `CardId is require!`
             })
             else if(!validInput.isValidPassword(password)){
                 return done(null, false, {
@@ -247,31 +247,33 @@ var myLocalConfig = (passport) => {
             }
             process.nextTick(function(){
             if(!req.user) {
-                Teacher.findOne({'userName': _.trim(userName)}, (err, user) =>{
-                    if(err)
-                        return done(err);
-                    else if(user)
-                        return done(null, false, {
-                            success: false,
-                            message: `Đã tồn tại tên tài khoản!`
-                        })
-                    else{
-                        var newUser = new Teacher()
-                        newUser.cardID = _.trim(req.body.cardID)
-                        newUser.userName = _.trim(userName)
-                        newUser.password = newUser.generateHash(password)
-                        newUser.fullName = req.body.fullName 
-                        newUser.firstCharOfLastName = newUser.getFirstCharOfLastName(req.body.fullName)
-                        newUser.save(err => {
-                            if(err)
-                                return done(err)
-                            return done(null, newUser, {
-                                success: true,
-                                message: `Đăng ký thành công!`,
-                                user: newUser
+                Teacher
+                    .findOne({cardID: req.body.cardID,userName: userName})
+                    .exec((err, user) =>{
+                        if(err)
+                            return done(err);   
+                        else if(user)
+                            return done(null, false, {
+                                success: false,
+                                message: `Đã tồn tại tên tài khoản hoặc trùng cardID!`
                             })
-                        })
-                    }
+                        else{
+                            var newUser = new Teacher()
+                            newUser.cardID = _.trim(req.body.cardID)
+                            newUser.userName = _.trim(userName)
+                            newUser.password = newUser.generateHash(password)
+                            newUser.fullName = req.body.fullName 
+                            newUser.firstCharOfLastName = newUser.getFirstCharOfLastName(req.body.fullName)
+                            newUser.save(err => {
+                                if(err)
+                                    return done(err)
+                                return done(null, newUser, {
+                                    success: true,
+                                    message: `Đăng ký thành công!`,
+                                    user: newUser
+                                })
+                            })
+                        }
                 })
             }
             else if( !req.user.userName) {

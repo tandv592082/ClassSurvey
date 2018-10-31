@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
-const user = require('../auth/user')
+const student = require('../auth/student')
+const teacher  = require('../auth/teacher')
 const ObjectSchema = new mongoose.Schema({
     credit: { //số tín chỉ
         type: Number,
@@ -10,14 +11,14 @@ const ObjectSchema = new mongoose.Schema({
         require: true
     },
     teacher:{//cán bộ dạy
-        cardId: Number,
+        type: mongoose.Schema.Types.ObjectId,
         require: true,
-        ref: 'user'
+        ref: 'teacher'
     },
-    student:[{// danh sách sinh viên
-        cardId: Number,
+    students:[{// danh sách sinh viên
+        type: mongoose.Schema.Types.ObjectId,
         require: true,
-        ref: 'user'
+        ref: 'student'
     }],
     lectureRoom:{ // phòng học
         type: String,
@@ -33,4 +34,4 @@ const ObjectSchema = new mongoose.Schema({
     }
 })
 
-module.exports = mongoose.model('Object', ObjectSchema)
+module.exports = mongoose.model('object', ObjectSchema)

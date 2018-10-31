@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const admin = require('./admin')
+const object = require('../objects/object')
 const bcrypt = require('bcrypt-nodejs')
 const student = mongoose.Schema({
     cardID: {
@@ -33,7 +34,8 @@ const student = mongoose.Schema({
         default: Date.now,
         require: true
     },
-    createByAdmin:{type: mongoose.Types.ObjectId, ref: 'admin'}
+    createByAdmin:{type:mongoose.Schema.Types.ObjectId, ref: 'admin'},
+    learnObject:[{type:mongoose.Schema.Types.ObjectId, ref: 'object'}]
 });
 
 //generate hash  password

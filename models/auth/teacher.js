@@ -35,7 +35,7 @@ const teacher = mongoose.Schema({
         require: true
     },
     createByAdmin:{type: mongoose.Schema.Types.ObjectId, ref: 'admin'},
-    teachObject :[{type: mongoose.Schema.Types.ObjectId, ref: 'object'}]
+    teachObject :[{type: mongoose.Schema.Types.ObjectId, ref: 'object', require: true}]
 });
 
 //generate hash  password

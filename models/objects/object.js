@@ -10,15 +10,13 @@ const ObjectSchema = new mongoose.Schema({
         type: String,
         require: true
     },
-    teacher:{//cán bộ dạy
-        type: mongoose.Schema.Types.ObjectId,
+    teacherID:{//cán bộ dạy
+        type: Number,
         require: true,
-        ref: 'teacher'
     },
-    students:[{// danh sách sinh viên
-        type: mongoose.Schema.Types.ObjectId,
+    studentID:[{// danh sách sinh viên
+        type: Number,
         require: true,
-        ref: 'student'
     }],
     lectureRoom:{ // phòng học
         type: String,

@@ -248,7 +248,7 @@ var myLocalConfig = (passport) => {
             process.nextTick(function(){
             if(!req.user) {
                 Teacher
-                    .findOne({cardID: req.body.cardID,userName: userName})
+                    .findOne({userName: userName})
                     .exec((err, user) =>{
                         if(err)
                             return done(err);   
